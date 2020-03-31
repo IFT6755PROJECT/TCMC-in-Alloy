@@ -60,7 +60,7 @@ one sig f1,f4 extends Form {}
 
 
 fact elements {
-	fm1.root = Wash
+	//fm1.root = Wash
 	fm1.features = Wash+Heat+Delay+Dry
 	fm1.relations = r1+r2+r3
 	fm1.forms = f1+f4
