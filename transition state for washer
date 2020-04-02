@@ -1,0 +1,33 @@
+open ctlfc[State]
+open util/integer
+
+//***********************STATE SPACE*************************//
+abstract sig Process {}
+one sig Locking, Waiting, Washing, Drying, Unlocking extends Process {}
+
+abstract sig Feature {}
+one sig Heat, Dry, Delay extends Feature {}
+
+sig State {
+  // current process
+  process: one Process, 
+  //current Feature
+  feature: lone Feature,
+  // current process feature relation
+  relation:  Process -> lone Feature
+
+} 
+
+//*****************INITIAL STATE CONSTRAINTS********************//
+
+pred init [s:State] {
+    s.process = Locking
+    #s.process =1
+    no Waiting
+    no Washing
+    no Drying
+    no Unlocking
+    no s.feature 
+    no s.relation 
+}
+run init for 1 Process,  1 Feature, exactly 1 State
