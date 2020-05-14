@@ -6,34 +6,34 @@ abstract sig Transition {
 }{ Source != Target
 }
 
-lone abstract sig A,B,C,D,E,F,G,H,I, J extends Transition {}
+ abstract sig A,B,C,D,E,F,G,H,I, J extends Transition {}
 {
-//#A=1
-//#B<=1
-//#C <=1
-//#D<=1
-//#E <=1
-//#F <=1
-//#G <=1
-//#H <=1
-//#I <=1
-//#J =1
-//#K <=1
+#A=0
+#B=0
+#C =0
+#D=0
+#E =0
+#F =1
+#G =1
+#H =1
+#I =1
+#J =1
+
 }
 fact transitionModel {
-all t: Transition| t=A iff t.Source.S=Locking and t.Target.S=Waiting and t.Target.F=Delay
-all t: Transition| t=B iff t.Source.S=Waiting and t.Source.F=Delay and t.Target.S=Washing and t.Target.F=Wash
-all t: Transition| t=C iff t.Source.S=Washing and t.Source.F=Wash and t.Target.S= Unlocking
+all disj t: Transition| t=A iff t.Source.S=Locking and t.Target.S=Waiting and t.Target.F=Delay
+all disj t: Transition| t=B iff t.Source.S=Waiting and t.Source.F=Delay and t.Target.S=Washing and t.Target.F=Wash
+all disj t: Transition| t=C iff t.Source.S=Washing and t.Source.F=Wash and t.Target.S= Unlocking
 
-all t: Transition| t=D iff t.Source.S=Locking and  t.Target.S= Washing and t.Target.F=Wash
-all t: Transition| t=E iff t.Source.S=Washing and t.Source.F=Wash and t.Target.S=Drying
-all t: Transition| t=F iff t.Source.S=Drying and t.Target.S=Unlocking
+all disj t: Transition| t=D iff t.Source.S=Locking and  t.Target.S= Washing and t.Target.F=Wash
+all disj t: Transition| t=E iff t.Source.S=Washing and t.Source.F=Wash and t.Target.S=Drying
+all disj t: Transition| t=F iff t.Source.S=Drying and t.Target.S=Unlocking
 
-all t: Transition| t=G iff t.Source.S=Locking and  t.Target.S= Waiting and t.Target.F=Heat
-all t: Transition| t=H iff t.Source.S=Waiting and t.Source.F=Heat and  t.Target.S= Washing and t.Target.F=Heat
-all t: Transition| t=I iff t.Source.S=Washing and t.Source.F=Heat and t.Target.S=Drying 
+all disj t: Transition| t=G iff t.Source.S=Locking and  t.Target.S= Waiting and t.Target.F=Heat
+all disj t: Transition| t=H iff t.Source.S=Waiting and t.Source.F=Heat and  t.Target.S= Washing and t.Target.F=Heat
+all disj t: Transition| t=I iff t.Source.S=Washing and t.Source.F=Heat and t.Target.S=Drying 
 
-all t: Transition| t=J iff t.Source.S=Unlocking and t.Target.S=Locking
+all disj t: Transition| t=J iff t.Source.S=Unlocking and t.Target.S=Locking
 }
 
 // The whole SPL
@@ -85,7 +85,7 @@ pred validTransition[s,s' : State ]{
 s.S=Locking =>  (s'.S=Waiting and s'.F=Heat)  or (s'.S=Waiting and s'.F=Delay) or (s'.S=Washing and s'.F = Wash)
 s.S=Waiting  and s.F=Heat =>  s'.S=Washing and s'.F = Heat 
 s.S=Waiting  and s.F=Delay=>  s'.S=Washing and s'.F = Wash 
-s.S=Washing => s'.S=Drying or s'.S=Unlocking 
+s.S=Washing and (s.F = Wash or s.F=Heat) => s'.S=Drying or s'.S=Unlocking 
 s.S=Drying => s'.S=Unlocking 
 s.S=Unlocking => s'.S=Locking
 Transition.Source = s => Transition.Target = s'
@@ -114,7 +114,10 @@ pred totalityAxiom {
     s->s' in nextState iff s' in s.transition
 }
 
-run showExamples { } for exactly 4 State, exactly 4 Transition
+pred showExample {
+
+}
+run showExamples { } for exactly 5 State, exactly 5 Transition
 
 assert letsModelCheckThisFormula{
 	ctl_mc[ ex[{s:State | completeThis[s]}] ]
@@ -126,5 +129,14 @@ s.F = Wash
 
 }
 check letsModelCheckThisFormula 
+//Safety: heated wash and delayed wash features are mutually exclusive
+assert letsModelCheckSafetyFormula{
+	ctl_mc[ ex[{s:State | safety[s]}] ]
+}
+pred safety [s:State]{
+  // TODO
+s.S=Waiting and s.F=Heat =>  s.F!=Delay 
 
+}
+check letsModelCheckSafetyFormula 
 
